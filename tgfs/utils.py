@@ -33,8 +33,9 @@ SITE_BRAND = "[MultiMovieDownloader]"
 # Common piracy/external site tags & usernames to strip automatically
 STRIP_PATTERNS = [
     r"@[\w\d_]+",
-    r"(?i)\b(hdhub4u|vegamovies|filmyzilla|filmywap|movierulz|mkvcinemas|bolly4u|9xmovies|katmoviehd|worldfree4u|pagalworld|ssr?movies|moviesmod|uhdmovies|olamovies|cinevood|extramovies|skymovieshd|sdmoviespoint|downloadhub|jalshamoviez|mlsbd|southfreak)\b(\.[a-z]{2,6})?",
+    r"(?i)(?:^|[._\-\s\[\(])(hdhub4u|vegamovies|filmyzilla|filmywap|movierulz|mkvcinemas|bolly4u|9xmovies|katmoviehd|worldfree4u|pagalworld|ssr?movies|moviesmod|uhdmovies|olamovies|cinevood|extramovies|skymovieshd|sdmoviespoint|downloadhub|jalshamoviez|mlsbd|southfreak)(?:\.[a-z]{2,6})?(?=$|[._\-\s\]\)])",
 ]
+
 
 
 def clean_and_brand_filename(raw_name: str) -> str:
