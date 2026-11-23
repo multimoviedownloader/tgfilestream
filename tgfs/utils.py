@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import re
 from typing import Optional, Union, cast
 from dataclasses import dataclass
 from telethon import TelegramClient
@@ -25,6 +27,35 @@ from telethon.events import NewMessage
 from tgfs.config import Config
 
 InputTypeLocation = Union[types.InputDocumentFileLocation, types.InputPhotoFileLocation]
+
+SITE_BRAND = "[MultiMovieDownloader]"
+
+# Common piracy/external site tags & usernames to strip automatically
+STRIP_PATTERNS = [
+    r"@[\w\d_]+",
+    r"(?i)\b(hdhub4u|vegamovies|filmyzilla|filmywap|movierulz|mkvcinemas|bolly4u|9xmovies|katmoviehd|worldfree4u|pagalworld|ssr?movies|moviesmod|uhdmovies|olamovies|cinevood|extramovies|skymovieshd|sdmoviespoint|downloadhub|jalshamoviez|mlsbd|southfreak)\b(\.[a-z]{2,6})?",
+]
+
+
+def clean_and_brand_filename(raw_name: str) -> str:
+    base, ext = os.path.splitext(raw_name)
+    cleaned = base
+
+    for pattern in STRIP_PATTERNS:
+        cleaned = re.sub(pattern, "", cleaned)
+
+    # Clean leftover brackets, extra dots, dashes, or spaces
+    cleaned = re.sub(r"[\[\(\{]\s*[\]\)\}]", "", cleaned)
+    cleaned = re.sub(r"[._\-\s]+", "_", cleaned).strip("._-")
+
+    if not cleaned:
+        cleaned = "Movie"
+
+    if SITE_BRAND.lower() not in cleaned.lower():
+        cleaned = f"{cleaned}_{SITE_BRAND}"
+
+    return f"{cleaned}{ext}"
+
 
 @dataclass
 class FileInfo:
@@ -40,11 +71,12 @@ class FileInfo:
 
 def get_filename(message: Union[Message, NewMessage.Event]) -> str:
     if message.file.name:
-        return message.file.name
+        return clean_and_brand_filename(message.file.name)
     media: Union[types.MessageMediaDocument, types.MessageMediaPhoto] = message.media
     file: Union[types.Photo, types.Document] = getattr(media, "document", None) or getattr(media, "photo", None)
     ext = message.file.ext or ""
-    return f"{file.id}{ext}"
+    return clean_and_brand_filename(f"{file.id}{ext}")
+
 
 async def get_fileinfo(client: TelegramClient, msg_id: int, file_name: str) -> Optional[FileInfo]:
     message = cast(Message, await client.get_messages(Config.BIN_CHANNEL, ids=msg_id))
